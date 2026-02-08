@@ -5,12 +5,14 @@ import type { AuctionItem } from "@/lib/supabase";
 import { BidForm } from "@/components/BidForm";
 import { useCountdown } from "@/hooks/useCountdown";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { useSettings } from "@/contexts/SettingsContext";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Clock, TrendingUp, AlertCircle } from "lucide-react";
 
 export default function AuctionDetail() {
   const { id } = useParams<{ id: string }>();
+  const { settings } = useSettings();
   const [item, setItem] = useState<AuctionItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -182,7 +184,7 @@ export default function AuctionDetail() {
                   {item.current_highest_bid ? "Current Highest Bid" : "Starting Price"}
                 </p>
                 <p className="font-display text-3xl font-bold text-foreground">
-                  {formatCurrency(currentPrice)}
+                  {formatCurrency(currentPrice, settings.currency)}
                 </p>
               </div>
               {item.current_highest_bid && (

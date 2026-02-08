@@ -71,6 +71,90 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
+  /* Emerald & Cream Theme */
+  [data-theme="emerald-cream"] {
+    --background: 140 20% 97%;
+    --foreground: 140 30% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 140 30% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 140 30% 10%;
+    --primary: 160 45% 20%;
+    --primary-foreground: 45 30% 95%;
+    --secondary: 45 50% 85%;
+    --secondary-foreground: 160 45% 20%;
+    --muted: 140 15% 92%;
+    --muted-foreground: 140 15% 45%;
+    --accent: 160 50% 40%;
+    --accent-foreground: 45 30% 95%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 140 15% 88%;
+    --input: 140 15% 88%;
+    --ring: 160 50% 40%;
+    --gold: 160 50% 40%;
+    --gold-light: 160 45% 55%;
+    --gold-dark: 160 55% 25%;
+    --navy: 160 45% 20%;
+    --navy-light: 160 40% 30%;
+  }
+
+  /* Burgundy & Pearl Theme */
+  [data-theme="burgundy-pearl"] {
+    --background: 340 20% 97%;
+    --foreground: 340 30% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 340 30% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 340 30% 10%;
+    --primary: 340 50% 25%;
+    --primary-foreground: 340 20% 95%;
+    --secondary: 340 30% 90%;
+    --secondary-foreground: 340 50% 25%;
+    --muted: 340 15% 92%;
+    --muted-foreground: 340 15% 45%;
+    --accent: 340 55% 45%;
+    --accent-foreground: 340 20% 95%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 340 15% 88%;
+    --input: 340 15% 88%;
+    --ring: 340 55% 45%;
+    --gold: 340 55% 45%;
+    --gold-light: 340 50% 60%;
+    --gold-dark: 340 60% 30%;
+    --navy: 340 50% 25%;
+    --navy-light: 340 45% 35%;
+  }
+
+  /* Midnight & Silver Theme */
+  [data-theme="midnight-silver"] {
+    --background: 230 25% 95%;
+    --foreground: 230 30% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 230 30% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 230 30% 10%;
+    --primary: 230 35% 15%;
+    --primary-foreground: 230 15% 95%;
+    --secondary: 230 20% 85%;
+    --secondary-foreground: 230 35% 15%;
+    --muted: 230 15% 92%;
+    --muted-foreground: 230 15% 45%;
+    --accent: 230 25% 55%;
+    --accent-foreground: 230 15% 95%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 230 15% 88%;
+    --input: 230 15% 88%;
+    --ring: 230 25% 55%;
+    --gold: 230 25% 55%;
+    --gold-light: 230 20% 70%;
+    --gold-dark: 230 30% 40%;
+    --navy: 230 35% 15%;
+    --navy-light: 230 30% 25%;
+  }
+
   .dark {
     --background: 220 30% 8%;
     --foreground: 45 20% 95%;

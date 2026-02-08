@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSettings, currencyConfig } from "@/contexts/SettingsContext";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,9 +18,12 @@ type BidFormProps = {
 
 export function BidForm({ auctionId, minimumBid, isExpired, onBidPlaced }: BidFormProps) {
   const { user } = useAuth();
+  const { settings } = useSettings();
   const { toast } = useToast();
   const [amount, setAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const currencySymbol = currencyConfig[settings.currency].symbol;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +42,7 @@ export function BidForm({ auctionId, minimumBid, isExpired, onBidPlaced }: BidFo
     if (isNaN(bidAmount) || bidAmount < minimumBid) {
       toast({
         title: "Invalid Bid",
-        description: `Your bid must be at least ${formatCurrency(minimumBid)}`,
+        description: `Your bid must be at least ${formatCurrency(minimumBid, settings.currency)}`,
         variant: "destructive",
       });
       return;
@@ -57,7 +61,7 @@ export function BidForm({ auctionId, minimumBid, isExpired, onBidPlaced }: BidFo
 
       toast({
         title: "Bid Placed Successfully!",
-        description: `Your bid of ${formatCurrency(bidAmount)} has been recorded.`,
+        description: `Your bid of ${formatCurrency(bidAmount, settings.currency)} has been recorded.`,
       });
 
       setAmount("");
@@ -99,7 +103,7 @@ export function BidForm({ auctionId, minimumBid, isExpired, onBidPlaced }: BidFo
         </Label>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-            $
+            {currencySymbol}
           </span>
           <Input
             id="bid-amount"
@@ -114,7 +118,7 @@ export function BidForm({ auctionId, minimumBid, isExpired, onBidPlaced }: BidFo
           />
         </div>
         <p className="text-xs text-muted-foreground">
-          Minimum bid: {formatCurrency(minimumBid)}
+          Minimum bid: {formatCurrency(minimumBid, settings.currency)}
         </p>
       </div>
 

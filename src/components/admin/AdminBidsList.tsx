@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { useSettings } from "@/contexts/SettingsContext";
 import {
   Table,
   TableBody,
@@ -25,6 +26,7 @@ type BidWithDetails = {
 };
 
 export function AdminBidsList() {
+  const { settings } = useSettings();
   const [bids, setBids] = useState<BidWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -121,7 +123,7 @@ export function AdminBidsList() {
                     {bid.profiles?.email ?? "Unknown Bidder"}
                   </TableCell>
                   <TableCell className="font-semibold text-gold">
-                    {formatCurrency(bid.amount)}
+                    {formatCurrency(bid.amount, settings.currency)}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {formatDate(bid.created_at)}
