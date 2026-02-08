@@ -40,7 +40,7 @@ export default function Auctions() {
   return <div className="container py-8 lg:py-12 bg-[#083891]">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold text-foreground lg:text-4xl">
+          <h1 className="font-display text-3xl font-bold lg:text-4xl text-zinc-50">
             Active Auctions
           </h1>
           <p className="mt-1 text-muted-foreground">
