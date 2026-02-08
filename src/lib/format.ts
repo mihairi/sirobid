@@ -1,7 +1,10 @@
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
+import { Currency, currencyConfig } from "@/contexts/SettingsContext";
+
+export function formatCurrency(amount: number, currency: Currency = "USD"): string {
+  const config = currencyConfig[currency];
+  return new Intl.NumberFormat(config.locale, {
     style: "currency",
-    currency: "USD",
+    currency: config.code,
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount);

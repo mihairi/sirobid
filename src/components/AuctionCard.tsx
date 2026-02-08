@@ -3,12 +3,14 @@ import { Clock, TrendingUp } from "lucide-react";
 import { AuctionItem } from "@/lib/supabase";
 import { useCountdown } from "@/hooks/useCountdown";
 import { formatCurrency } from "@/lib/format";
+import { useSettings } from "@/contexts/SettingsContext";
 
 type AuctionCardProps = {
   item: AuctionItem;
 };
 
 export function AuctionCard({ item }: AuctionCardProps) {
+  const { settings } = useSettings();
   const { timeLeft, isUrgent, isExpired } = useCountdown(item.end_time);
   const currentPrice = item.current_highest_bid ?? item.starting_price;
 
@@ -60,7 +62,7 @@ export function AuctionCard({ item }: AuctionCardProps) {
                 {item.current_highest_bid ? "Current Bid" : "Starting Price"}
               </p>
               <p className="font-display text-xl font-bold text-foreground">
-                {formatCurrency(currentPrice)}
+                {formatCurrency(currentPrice, settings.currency)}
               </p>
             </div>
 
