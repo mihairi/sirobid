@@ -56,20 +56,45 @@ export function AdminBidsList() {
   }, []);
 
   const fetchBids = async () => {
-    const { data, error } = await supabase
+    // Fetch bids with auction item titles
+    const { data: bidsData, error: bidsError } = await supabase
       .from("bids")
       .select(`
         id,
         amount,
         created_at,
-        auction_items (title),
-        profiles:bidder_id (email)
+        bidder_id,
+        auction_items (title)
       `)
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setBids(data as unknown as BidWithDetails[]);
+    if (bidsError || !bidsData) {
+      setIsLoading(false);
+      return;
     }
+
+    // Fetch profiles for all unique bidder_ids
+    const bidderIds = [...new Set(bidsData.map((b) => b.bidder_id))];
+    const { data: profilesData } = await supabase
+      .from("profiles")
+      .select("user_id, email")
+      .in("user_id", bidderIds);
+
+    const profileMap = new Map(
+      (profilesData ?? []).map((p) => [p.user_id, p.email])
+    );
+
+    const merged: BidWithDetails[] = bidsData.map((b) => ({
+      id: b.id,
+      amount: b.amount,
+      created_at: b.created_at,
+      auction_items: b.auction_items as { title: string } | null,
+      profiles: profileMap.has(b.bidder_id)
+        ? { email: profileMap.get(b.bidder_id)! }
+        : null,
+    }));
+
+    setBids(merged);
     setIsLoading(false);
   };
 
