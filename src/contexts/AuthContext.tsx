@@ -21,26 +21,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          const { data: roles } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", session.user.id);
-          
-          setIsAdmin(roles?.some(r => r.role === "admin") ?? false);
+          // Use setTimeout to avoid Supabase deadlock
+          setTimeout(async () => {
+            const { data: roles } = await supabase
+              .from("user_roles")
+              .select("role")
+              .eq("user_id", session.user.id);
+            
+            setIsAdmin(roles?.some(r => r.role === "admin") ?? false);
+            setIsLoading(false);
+          }, 0);
         } else {
           setIsAdmin(false);
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       }
     );
 
+    // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -82,6 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    setUser(null);
+    setSession(null);
+    setIsAdmin(false);
     await supabase.auth.signOut();
   };
 
