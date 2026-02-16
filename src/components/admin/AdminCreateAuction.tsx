@@ -1,19 +1,24 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSettings } from "@/contexts/SettingsContext";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, ImageIcon } from "lucide-react";
+import { Loader2, Upload, ImageIcon, Plus, X } from "lucide-react";
 import { z } from "zod";
 
 const auctionSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
   description: z.string().trim().min(1, "Description is required").max(1000),
   startingPrice: z.number().min(0.01, "Price must be greater than 0"),
-  durationHours: z.number().min(1, "Duration must be at least 1 hour").max(720),
+  startTime: z.string().min(1, "Start date is required"),
+  endTime: z.string().min(1, "End date is required"),
+}).refine((data) => new Date(data.endTime) > new Date(data.startTime), {
+  message: "End date must be after start date",
+  path: ["endTime"],
 });
 
 type AdminCreateAuctionProps = {
@@ -22,41 +27,61 @@ type AdminCreateAuctionProps = {
 
 export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
   const { user } = useAuth();
+  const { settings } = useSettings();
   const { toast } = useToast();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startingPrice, setStartingPrice] = useState("");
-  const [durationHours, setDurationHours] = useState("24");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [mainImage, setMainImage] = useState<File | null>(null);
+  const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
+  const [extraImages, setExtraImages] = useState<File[]>([]);
+  const [extraImagePreviews, setExtraImagePreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file);
+      setMainImage(file);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
+      reader.onloadend = () => setMainImagePreview(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
 
-  const uploadImage = async (file: File): Promise<string | null> => {
+  const handleExtraImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setExtraImages((prev) => [...prev, ...files]);
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setExtraImagePreviews((prev) => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+    // Reset input so same file can be re-added
+    e.target.value = "";
+  };
+
+  const removeExtraImage = (index: number) => {
+    setExtraImages((prev) => prev.filter((_, i) => i !== index));
+    setExtraImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadImage = async (file: File): Promise<string> => {
     const fileExt = file.name.split(".").pop();
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
     const filePath = `auction-items/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { error } = await supabase.storage
       .from("auction-images")
       .upload(filePath, file);
-
-    if (uploadError) {
-      throw uploadError;
-    }
+    if (error) throw error;
 
     const { data } = supabase.storage.from("auction-images").getPublicUrl(filePath);
     return data.publicUrl;
@@ -70,7 +95,8 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
       title,
       description,
       startingPrice: parseFloat(startingPrice),
-      durationHours: parseInt(durationHours),
+      startTime,
+      endTime,
     });
 
     if (!validation.success) {
@@ -88,22 +114,28 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
 
     try {
       let imageUrl: string | null = null;
-
-      if (imageFile) {
-        imageUrl = await uploadImage(imageFile);
+      if (mainImage) {
+        imageUrl = await uploadImage(mainImage);
       }
 
-      const now = new Date();
-      const endTime = new Date(now.getTime() + parseInt(durationHours) * 60 * 60 * 1000);
+      const extraImageUrls: string[] = [];
+      for (const file of extraImages) {
+        const url = await uploadImage(file);
+        extraImageUrls.push(url);
+      }
+
+      const startDate = new Date(startTime);
+      const endDate = new Date(endTime);
 
       const { error } = await supabase.from("auction_items").insert({
         title,
         description,
         starting_price: parseFloat(startingPrice),
         image_url: imageUrl,
-        start_time: now.toISOString(),
-        end_time: endTime.toISOString(),
-        original_end_time: endTime.toISOString(),
+        extra_images: extraImageUrls,
+        start_time: startDate.toISOString(),
+        end_time: endDate.toISOString(),
+        original_end_time: endDate.toISOString(),
         is_active: true,
         created_by: user?.id,
       });
@@ -119,9 +151,12 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
       setTitle("");
       setDescription("");
       setStartingPrice("");
-      setDurationHours("24");
-      setImageFile(null);
-      setImagePreview(null);
+      setStartTime("");
+      setEndTime("");
+      setMainImage(null);
+      setMainImagePreview(null);
+      setExtraImages([]);
+      setExtraImagePreviews([]);
 
       onSuccess();
     } catch (error: any) {
@@ -135,6 +170,8 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
     }
   };
 
+  const currencySymbol = settings.currency;
+
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-2xl space-y-6">
       <div className="rounded-lg border border-border bg-card p-6 shadow-card">
@@ -143,20 +180,20 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
         </h2>
 
         <div className="space-y-6">
-          {/* Image Upload */}
+          {/* Main Image Upload */}
           <div className="space-y-2">
-            <Label>Item Image</Label>
+            <Label>Main Image</Label>
             <div
               className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors ${
-                imagePreview
+                mainImagePreview
                   ? "border-gold bg-gold/5"
                   : "border-border hover:border-gold/50"
               }`}
             >
-              {imagePreview ? (
+              {mainImagePreview ? (
                 <div className="relative">
                   <img
-                    src={imagePreview}
+                    src={mainImagePreview}
                     alt="Preview"
                     className="max-h-48 rounded-lg object-cover"
                   />
@@ -166,8 +203,8 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
                     size="sm"
                     className="absolute -right-2 -top-2"
                     onClick={() => {
-                      setImageFile(null);
-                      setImagePreview(null);
+                      setMainImage(null);
+                      setMainImagePreview(null);
                     }}
                   >
                     ×
@@ -177,16 +214,50 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
                 <>
                   <ImageIcon className="h-10 w-10 text-muted-foreground" />
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Click or drag to upload an image
+                    Click or drag to upload main image
                   </p>
                 </>
               )}
               <input
                 type="file"
                 accept="image/*"
-                onChange={handleImageChange}
+                onChange={handleMainImageChange}
                 className="absolute inset-0 cursor-pointer opacity-0"
               />
+            </div>
+          </div>
+
+          {/* Extra Images */}
+          <div className="space-y-2">
+            <Label>Additional Images (optional)</Label>
+            <div className="flex flex-wrap gap-3">
+              {extraImagePreviews.map((preview, index) => (
+                <div key={index} className="relative">
+                  <img
+                    src={preview}
+                    alt={`Extra ${index + 1}`}
+                    className="h-20 w-20 rounded-lg object-cover border border-border"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeExtraImage(index)}
+                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-gold/50 transition-colors">
+                <Plus className="h-5 w-5 text-muted-foreground" />
+                <span className="text-[10px] text-muted-foreground mt-1">Add</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleExtraImagesChange}
+                  className="hidden"
+                />
+              </label>
             </div>
           </div>
 
@@ -223,42 +294,55 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
             )}
           </div>
 
+          {/* Starting Price */}
+          <div className="space-y-2">
+            <Label htmlFor="startingPrice">Starting Price ({currencySymbol})</Label>
+            <Input
+              id="startingPrice"
+              type="number"
+              step="0.01"
+              min="0.01"
+              value={startingPrice}
+              onChange={(e) => setStartingPrice(e.target.value)}
+              placeholder="100.00"
+              className="input-premium"
+              disabled={isSubmitting}
+            />
+            {errors.startingPrice && (
+              <p className="text-sm text-destructive">{errors.startingPrice}</p>
+            )}
+          </div>
+
           <div className="grid gap-6 sm:grid-cols-2">
-            {/* Starting Price */}
+            {/* Start Date */}
             <div className="space-y-2">
-              <Label htmlFor="startingPrice">Starting Price ($)</Label>
+              <Label htmlFor="startTime">Start Date & Time</Label>
               <Input
-                id="startingPrice"
-                type="number"
-                step="0.01"
-                min="0.01"
-                value={startingPrice}
-                onChange={(e) => setStartingPrice(e.target.value)}
-                placeholder="100.00"
+                id="startTime"
+                type="datetime-local"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
                 className="input-premium"
                 disabled={isSubmitting}
               />
-              {errors.startingPrice && (
-                <p className="text-sm text-destructive">{errors.startingPrice}</p>
+              {errors.startTime && (
+                <p className="text-sm text-destructive">{errors.startTime}</p>
               )}
             </div>
 
-            {/* Duration */}
+            {/* End Date */}
             <div className="space-y-2">
-              <Label htmlFor="durationHours">Duration (hours)</Label>
+              <Label htmlFor="endTime">End Date & Time</Label>
               <Input
-                id="durationHours"
-                type="number"
-                min="1"
-                max="720"
-                value={durationHours}
-                onChange={(e) => setDurationHours(e.target.value)}
-                placeholder="24"
+                id="endTime"
+                type="datetime-local"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
                 className="input-premium"
                 disabled={isSubmitting}
               />
-              {errors.durationHours && (
-                <p className="text-sm text-destructive">{errors.durationHours}</p>
+              {errors.endTime && (
+                <p className="text-sm text-destructive">{errors.endTime}</p>
               )}
             </div>
           </div>
