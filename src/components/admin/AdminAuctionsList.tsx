@@ -14,12 +14,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, ExternalLink } from "lucide-react";
+import { Trash2, ExternalLink, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
+import { AdminEditAuction } from "./AdminEditAuction";
 
 export function AdminAuctionsList() {
   const [items, setItems] = useState<AuctionItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingAuction, setEditingAuction] = useState<AuctionItem | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -55,6 +58,11 @@ export function AdminAuctionsList() {
     }
   };
 
+  const handleEdit = (item: AuctionItem) => {
+    setEditingAuction(item);
+    setEditOpen(true);
+  };
+
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Loading auctions...</div>;
   }
@@ -68,34 +76,45 @@ export function AdminAuctionsList() {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Item</TableHead>
-            <TableHead>Starting Price</TableHead>
-            <TableHead>Current Bid</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>End Time</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {items.map((item) => (
-            <AuctionRow key={item.id} item={item} onDelete={handleDelete} />
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <>
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Item</TableHead>
+              <TableHead>Starting Price</TableHead>
+              <TableHead>Current Bid</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>End Time</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.map((item) => (
+              <AuctionRow key={item.id} item={item} onDelete={handleDelete} onEdit={handleEdit} />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <AdminEditAuction
+        auction={editingAuction}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSuccess={fetchAuctions}
+      />
+    </>
   );
 }
 
 function AuctionRow({
   item,
   onDelete,
+  onEdit,
 }: {
   item: AuctionItem;
   onDelete: (id: string) => void;
+  onEdit: (item: AuctionItem) => void;
 }) {
   const { isExpired } = useCountdown(item.end_time);
 
@@ -135,6 +154,9 @@ function AuctionRow({
       </TableCell>
       <TableCell className="text-right">
         <div className="flex items-center justify-end gap-2">
+          <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
+            <Pencil className="h-4 w-4" />
+          </Button>
           <Link to={`/auction/${item.id}`}>
             <Button variant="ghost" size="icon">
               <ExternalLink className="h-4 w-4" />
