@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +18,8 @@ export default function Login() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+  const { t } = useTranslation();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -43,24 +45,24 @@ export default function Login() {
 
     try {
       const { error } = await signIn(email, password);
-      
+
       if (error) {
         toast({
-          title: "Sign In Failed",
+          title: t("login.signInFailed"),
           description: error.message || "Invalid email or password.",
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Welcome Back!",
-          description: "You have successfully signed in.",
+          title: t("login.welcomeBackToast"),
+          description: t("login.successDescription"),
         });
         navigate("/auctions");
       }
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        title: t("common.error"),
+        description: t("common.unexpectedError"),
         variant: "destructive",
       });
     } finally {
@@ -76,16 +78,16 @@ export default function Login() {
             <Gavel className="h-7 w-7 text-primary-foreground" />
           </div>
           <h1 className="mt-6 font-display text-3xl font-bold text-foreground">
-            Welcome Back
+            {t("login.welcomeBack")}
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Sign in to access your account and continue bidding
+            {t("login.description")}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
+            <Label htmlFor="email">{t("login.emailAddress")}</Label>
             <Input
               id="email"
               type="email"
@@ -101,7 +103,7 @@ export default function Login() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("login.password")}</Label>
             <Input
               id="password"
               type="password"
@@ -126,18 +128,18 @@ export default function Login() {
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Signing In...
+                {t("login.signingIn")}
               </>
             ) : (
-              "Sign In"
+              t("login.signIn")
             )}
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
+          {t("login.noAccount")}{" "}
           <Link to="/signup" className="font-medium text-gold hover:underline">
-            Create one now
+            {t("login.createOne")}
           </Link>
         </p>
       </div>

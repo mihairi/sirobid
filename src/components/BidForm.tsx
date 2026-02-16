@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings, currencyConfig } from "@/contexts/SettingsContext";
+import { useTranslation } from "@/hooks/useTranslation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ type BidFormProps = {
 export function BidForm({ auctionId, minimumBid, isExpired, onBidPlaced }: BidFormProps) {
   const { user } = useAuth();
   const { settings } = useSettings();
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [amount, setAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,22 +29,22 @@ export function BidForm({ auctionId, minimumBid, isExpired, onBidPlaced }: BidFo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) {
       toast({
-        title: "Authentication Required",
-        description: "Please sign in to place a bid.",
+        title: t("bid.authRequired"),
+        description: t("bid.authRequiredDesc"),
         variant: "destructive",
       });
       return;
     }
 
     const bidAmount = parseFloat(amount);
-    
+
     if (isNaN(bidAmount) || bidAmount < minimumBid) {
       toast({
-        title: "Invalid Bid",
-        description: `Your bid must be at least ${formatCurrency(minimumBid, settings.currency)}`,
+        title: t("bid.invalidBid"),
+        description: `${t("bid.minimumBid")}: ${formatCurrency(minimumBid, settings.currency)}`,
         variant: "destructive",
       });
       return;
@@ -60,15 +62,15 @@ export function BidForm({ auctionId, minimumBid, isExpired, onBidPlaced }: BidFo
       if (error) throw error;
 
       toast({
-        title: "Bid Placed Successfully!",
-        description: `Your bid of ${formatCurrency(bidAmount, settings.currency)} has been recorded.`,
+        title: t("bid.bidSuccess"),
+        description: `${formatCurrency(bidAmount, settings.currency)}`,
       });
 
       setAmount("");
       onBidPlaced();
     } catch (error: any) {
       toast({
-        title: "Bid Failed",
+        title: t("bid.bidFailed"),
         description: error.message || "Failed to place bid. Please try again.",
         variant: "destructive",
       });
@@ -80,7 +82,7 @@ export function BidForm({ auctionId, minimumBid, isExpired, onBidPlaced }: BidFo
   if (isExpired) {
     return (
       <div className="rounded-lg border border-border bg-muted/50 p-6 text-center">
-        <p className="font-medium text-muted-foreground">This auction has ended</p>
+        <p className="font-medium text-muted-foreground">{t("bid.auctionEnded")}</p>
       </div>
     );
   }
@@ -88,9 +90,7 @@ export function BidForm({ auctionId, minimumBid, isExpired, onBidPlaced }: BidFo
   if (!user) {
     return (
       <div className="rounded-lg border border-border bg-muted/50 p-6 text-center">
-        <p className="font-medium text-muted-foreground">
-          Please sign in to place a bid
-        </p>
+        <p className="font-medium text-muted-foreground">{t("bid.signInRequired")}</p>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export function BidForm({ auctionId, minimumBid, isExpired, onBidPlaced }: BidFo
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="bid-amount" className="text-sm font-medium">
-          Your Bid Amount
+          {t("bid.yourBidAmount")}
         </Label>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -118,26 +118,20 @@ export function BidForm({ auctionId, minimumBid, isExpired, onBidPlaced }: BidFo
           />
         </div>
         <p className="text-xs text-muted-foreground">
-          Minimum bid: {formatCurrency(minimumBid, settings.currency)}
+          {t("bid.minimumBid")}: {formatCurrency(minimumBid, settings.currency)}
         </p>
       </div>
 
-      <Button
-        type="submit"
-        variant="gold"
-        size="xl"
-        className="w-full"
-        disabled={isSubmitting}
-      >
+      <Button type="submit" variant="gold" size="xl" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            Placing Bid...
+            {t("bid.placingBid")}
           </>
         ) : (
           <>
             <Gavel className="mr-2 h-5 w-5" />
-            Place Bid
+            {t("bid.placeBid")}
           </>
         )}
       </Button>

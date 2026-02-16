@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 export type Currency = "USD" | "EUR" | "PLN" | "HUF" | "RON";
-export type Language = "en" | "pl" | "hu" | "ro";
+export type Language = "en" | "pl" | "hu" | "ro" | "de" | "fr";
 export type ColorScheme = "navy-gold" | "emerald-cream" | "burgundy-pearl" | "midnight-silver";
 
 export interface AppBranding {
@@ -112,6 +112,8 @@ export const languageLabels: Record<Language, string> = {
   pl: "Polski",
   hu: "Magyar",
   ro: "Română",
+  de: "Deutsch",
+  fr: "Français",
 };
 
 // Color scheme labels
