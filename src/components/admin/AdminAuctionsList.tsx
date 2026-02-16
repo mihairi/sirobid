@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { AuctionItem } from "@/lib/supabase";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { useSettings } from "@/contexts/SettingsContext";
 import { useCountdown } from "@/hooks/useCountdown";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -117,6 +118,7 @@ function AuctionRow({
   onEdit: (item: AuctionItem) => void;
 }) {
   const { isExpired } = useCountdown(item.end_time);
+  const { settings } = useSettings();
 
   return (
     <TableRow>
@@ -138,10 +140,10 @@ function AuctionRow({
           <span className="font-medium">{item.title}</span>
         </div>
       </TableCell>
-      <TableCell>{formatCurrency(item.starting_price)}</TableCell>
+      <TableCell>{formatCurrency(item.starting_price, settings.currency)}</TableCell>
       <TableCell>
         {item.current_highest_bid
-          ? formatCurrency(item.current_highest_bid)
+          ? formatCurrency(item.current_highest_bid, settings.currency)
           : "-"}
       </TableCell>
       <TableCell>
