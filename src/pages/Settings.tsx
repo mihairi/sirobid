@@ -17,11 +17,15 @@ const iconComponents: Record<AppBranding["icon"], React.ElementType> = {
 };
 
 export default function Settings() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { settings, updateCurrency, updateLanguage, updateColorScheme, updateBranding } = useSettings();
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
   }
 
   const handleNameChange = (name: string) => {
