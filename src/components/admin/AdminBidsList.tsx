@@ -21,6 +21,7 @@ type BidWithDetails = {
   created_at: string;
   auction_items: {
     title: string;
+    current_highest_bid: number | null;
   } | null;
   profiles: {
     email: string;
@@ -66,7 +67,7 @@ export function AdminBidsList() {
         amount,
         created_at,
         bidder_id,
-        auction_items (title)
+        auction_items (title, current_highest_bid)
       `)
       .order("created_at", { ascending: false });
 
@@ -90,7 +91,7 @@ export function AdminBidsList() {
       id: b.id,
       amount: b.amount,
       created_at: b.created_at,
-      auction_items: b.auction_items as { title: string } | null,
+      auction_items: b.auction_items as { title: string; current_highest_bid: number | null } | null,
       profiles: profileMap.has(b.bidder_id)
         ? { email: profileMap.get(b.bidder_id)! }
         : null,
@@ -117,23 +118,24 @@ export function AdminBidsList() {
       item: bid.auction_items?.title ?? "Unknown Item",
       email: bid.profiles?.email ?? "Unknown Bidder",
       amount: bid.amount,
+      highestBid: bid.auction_items?.current_highest_bid ?? 0,
       time: bid.created_at,
     }));
 
   const exportCSV = () => {
     const rows = buildRows(filteredBids);
-    const header = "Item Name,Bidder Email,Amount,Time of Bid";
+    const header = "Item Name,Bidder Email,Amount,Highest Bid,Time of Bid";
     const csv = [header, ...rows.map((r) =>
-      `"${r.item}","${r.email}",${r.amount},"${formatDate(r.time)}"`
+      `"${r.item}","${r.email}",${r.amount},${r.highestBid},"${formatDate(r.time)}"`
     )].join("\n");
     downloadFile(csv, "bids.csv", "text/csv");
   };
 
   const exportExcel = () => {
     const rows = buildRows(filteredBids);
-    const header = "<tr><th>Item Name</th><th>Bidder Email</th><th>Amount</th><th>Time of Bid</th></tr>";
+    const header = "<tr><th>Item Name</th><th>Bidder Email</th><th>Amount</th><th>Highest Bid</th><th>Time of Bid</th></tr>";
     const body = rows.map((r) =>
-      `<tr><td>${r.item}</td><td>${r.email}</td><td>${r.amount}</td><td>${formatDate(r.time)}</td></tr>`
+      `<tr><td>${r.item}</td><td>${r.email}</td><td>${r.amount}</td><td>${r.highestBid}</td><td>${formatDate(r.time)}</td></tr>`
     ).join("");
     const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:spreadsheet"><head><meta charset="UTF-8"></head><body><table>${header}${body}</table></body></html>`;
     downloadFile(html, "bids.xls", "application/vnd.ms-excel");
@@ -190,6 +192,7 @@ export function AdminBidsList() {
                 <TableHead>Item Name</TableHead>
                 <TableHead>Bidder Email</TableHead>
                 <TableHead>Amount</TableHead>
+                <TableHead>Highest Bid</TableHead>
                 <TableHead>Time of Bid</TableHead>
               </TableRow>
             </TableHeader>
@@ -204,6 +207,11 @@ export function AdminBidsList() {
                   </TableCell>
                   <TableCell className="font-semibold text-gold">
                     {formatCurrency(bid.amount, settings.currency)}
+                  </TableCell>
+                  <TableCell className="font-semibold">
+                    {bid.auction_items?.current_highest_bid
+                      ? formatCurrency(bid.auction_items.current_highest_bid, settings.currency)
+                      : "-"}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {formatDate(bid.created_at)}
