@@ -21,6 +21,7 @@ export type Database = {
           current_highest_bid: number | null
           description: string
           end_time: string
+          extra_images: string[] | null
           id: string
           image_url: string | null
           is_active: boolean
@@ -36,6 +37,7 @@ export type Database = {
           current_highest_bid?: number | null
           description: string
           end_time: string
+          extra_images?: string[] | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -51,6 +53,7 @@ export type Database = {
           current_highest_bid?: number | null
           description?: string
           end_time?: string
+          extra_images?: string[] | null
           id?: string
           image_url?: string | null
           is_active?: boolean
