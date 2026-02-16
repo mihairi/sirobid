@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useTranslation } from "@/hooks/useTranslation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ type AdminCreateAuctionProps = {
 export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
   const { user } = useAuth();
   const { settings } = useSettings();
+  const { t } = useTranslation();
   const { toast } = useToast();
 
   const [title, setTitle] = useState("");
@@ -143,8 +145,8 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
       if (error) throw error;
 
       toast({
-        title: "Auction Created!",
-        description: "Your auction is now live and accepting bids.",
+        title: t("admin.auctionCreated"),
+        description: t("admin.auctionLive"),
       });
 
       // Reset form
@@ -161,7 +163,7 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
       onSuccess();
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t("common.error"),
         description: error.message || "Failed to create auction",
         variant: "destructive",
       });
@@ -176,13 +178,13 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
     <form onSubmit={handleSubmit} className="mx-auto max-w-2xl space-y-6">
       <div className="rounded-lg border border-border bg-card p-6 shadow-card">
         <h2 className="font-display text-xl font-semibold text-foreground mb-6">
-          Create New Auction
+          {t("admin.createNewAuction")}
         </h2>
 
         <div className="space-y-6">
           {/* Main Image Upload */}
           <div className="space-y-2">
-            <Label>Main Image</Label>
+            <Label>{t("admin.mainImage")}</Label>
             <div
               className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors ${
                 mainImagePreview
@@ -214,7 +216,7 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
                 <>
                   <ImageIcon className="h-10 w-10 text-muted-foreground" />
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Click or drag to upload main image
+                    {t("admin.uploadMainImage")}
                   </p>
                 </>
               )}
@@ -229,7 +231,7 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
 
           {/* Extra Images */}
           <div className="space-y-2">
-            <Label>Additional Images (optional)</Label>
+            <Label>{t("admin.additionalImages")}</Label>
             <div className="flex flex-wrap gap-3">
               {extraImagePreviews.map((preview, index) => (
                 <div key={index} className="relative">
@@ -249,7 +251,9 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
               ))}
               <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-gold/50 transition-colors">
                 <Plus className="h-5 w-5 text-muted-foreground" />
-                <span className="text-[10px] text-muted-foreground mt-1">Add</span>
+                <span className="text-[10px] text-muted-foreground mt-1">
+                  {t("admin.add")}
+                </span>
                 <input
                   type="file"
                   accept="image/*"
@@ -263,7 +267,7 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
 
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">{t("admin.title")}</Label>
             <Input
               id="title"
               value={title}
@@ -279,7 +283,7 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t("admin.description")}</Label>
             <Textarea
               id="description"
               value={description}
@@ -296,7 +300,7 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
 
           {/* Starting Price */}
           <div className="space-y-2">
-            <Label htmlFor="startingPrice">Starting Price ({currencySymbol})</Label>
+            <Label htmlFor="startingPrice">{t("auction.startingPrice")} ({currencySymbol})</Label>
             <Input
               id="startingPrice"
               type="number"
@@ -316,7 +320,7 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
           <div className="grid gap-6 sm:grid-cols-2">
             {/* Start Date */}
             <div className="space-y-2">
-              <Label htmlFor="startTime">Start Date & Time</Label>
+              <Label htmlFor="startTime">{t("admin.startDateTime")}</Label>
               <Input
                 id="startTime"
                 type="datetime-local"
@@ -332,7 +336,7 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
 
             {/* End Date */}
             <div className="space-y-2">
-              <Label htmlFor="endTime">End Date & Time</Label>
+              <Label htmlFor="endTime">{t("admin.endDateTime")}</Label>
               <Input
                 id="endTime"
                 type="datetime-local"
@@ -357,12 +361,12 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Creating Auction...
+                {t("admin.creatingAuction")}
               </>
             ) : (
               <>
                 <Upload className="mr-2 h-5 w-5" />
-                Create Auction
+                {t("admin.createAuction")}
               </>
             )}
           </Button>

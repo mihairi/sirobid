@@ -6,6 +6,7 @@ import { BidForm } from "@/components/BidForm";
 import { useCountdown } from "@/hooks/useCountdown";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Clock, TrendingUp, AlertCircle } from "lucide-react";
@@ -13,13 +14,13 @@ import { ArrowLeft, Clock, TrendingUp, AlertCircle } from "lucide-react";
 export default function AuctionDetail() {
   const { id } = useParams<{ id: string }>();
   const { settings } = useSettings();
+  const { t } = useTranslation();
   const [item, setItem] = useState<AuctionItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchItem = useCallback(async () => {
     if (!id) return;
-
     const { data, error: fetchError } = await supabase
       .from("auction_items")
       .select("*")
@@ -38,27 +39,13 @@ export default function AuctionDetail() {
 
   useEffect(() => {
     fetchItem();
-
-    // Subscribe to realtime changes for this item
     const channel = supabase
       .channel(`auction_item_${id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "auction_items",
-          filter: `id=eq.${id}`,
-        },
-        (payload) => {
-          setItem(payload.new as AuctionItem);
-        }
-      )
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "auction_items", filter: `id=eq.${id}` }, (payload) => {
+        setItem(payload.new as AuctionItem);
+      })
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [id, fetchItem]);
 
   const { timeLeft, isUrgent, isExpired } = useCountdown(item?.end_time ?? "");
@@ -88,13 +75,13 @@ export default function AuctionDetail() {
         <div className="mx-auto max-w-md text-center">
           <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
           <h1 className="mt-4 font-display text-2xl font-bold text-foreground">
-            {error || "Item Not Found"}
+            {error || t("detail.itemNotFound")}
           </h1>
           <p className="mt-2 text-muted-foreground">
-            The auction you're looking for doesn't exist or has been removed.
+            {t("detail.notFoundDesc")}
           </p>
           <Link to="/auctions" className="mt-6 inline-block">
-            <Button variant="gold">Browse All Auctions</Button>
+            <Button variant="gold">{t("detail.browseAll")}</Button>
           </Link>
         </div>
       </div>
@@ -103,85 +90,43 @@ export default function AuctionDetail() {
 
   return (
     <div className="container py-8 lg:py-12">
-      <Link
-        to="/auctions"
-        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-      >
+      <Link to="/auctions" className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-4 w-4" />
-        Back to Auctions
+        {t("detail.backToAuctions")}
       </Link>
 
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-        {/* Image Section */}
         <div className="relative overflow-hidden rounded-xl bg-muted">
           {item.image_url ? (
-            <img
-              src={item.image_url}
-              alt={item.title}
-              className="aspect-square w-full object-cover"
-            />
+            <img src={item.image_url} alt={item.title} className="aspect-square w-full object-cover" />
           ) : (
             <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">
-              <span className="font-display text-8xl text-muted-foreground/30">
-                {item.title.charAt(0)}
-              </span>
+              <span className="font-display text-8xl text-muted-foreground/30">{item.title.charAt(0)}</span>
             </div>
           )}
         </div>
 
-        {/* Details Section */}
         <div className="flex flex-col">
-          <h1 className="font-display text-3xl font-bold text-foreground lg:text-4xl">
-            {item.title}
-          </h1>
+          <h1 className="font-display text-3xl font-bold text-foreground lg:text-4xl">{item.title}</h1>
+          <p className="mt-4 text-muted-foreground leading-relaxed">{item.description}</p>
 
-          <p className="mt-4 text-muted-foreground leading-relaxed">
-            {item.description}
-          </p>
-
-          {/* Timer */}
-          <div
-            className={`mt-6 flex items-center gap-3 rounded-lg border p-4 ${
-              isExpired
-                ? "border-muted bg-muted/50"
-                : isUrgent
-                ? "border-destructive/50 bg-destructive/10"
-                : "border-gold/30 bg-gold/5"
-            }`}
-          >
-            <Clock
-              className={`h-5 w-5 ${
-                isExpired
-                  ? "text-muted-foreground"
-                  : isUrgent
-                  ? "text-destructive animate-pulse"
-                  : "text-gold"
-              }`}
-            />
+          <div className={`mt-6 flex items-center gap-3 rounded-lg border p-4 ${isExpired ? "border-muted bg-muted/50" : isUrgent ? "border-destructive/50 bg-destructive/10" : "border-gold/30 bg-gold/5"}`}>
+            <Clock className={`h-5 w-5 ${isExpired ? "text-muted-foreground" : isUrgent ? "text-destructive animate-pulse" : "text-gold"}`} />
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                {isExpired ? "Auction Ended" : "Time Remaining"}
+                {isExpired ? t("detail.auctionEnded") : t("detail.timeRemaining")}
               </p>
-              <p
-                className={`font-display text-xl font-bold ${
-                  isExpired
-                    ? "text-muted-foreground"
-                    : isUrgent
-                    ? "text-destructive"
-                    : "text-foreground"
-                }`}
-              >
+              <p className={`font-display text-xl font-bold ${isExpired ? "text-muted-foreground" : isUrgent ? "text-destructive" : "text-foreground"}`}>
                 {timeLeft}
               </p>
             </div>
           </div>
 
-          {/* Current Price */}
           <div className="mt-6 rounded-lg border border-border bg-card p-6 shadow-card">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                  {item.current_highest_bid ? "Current Highest Bid" : "Starting Price"}
+                  {item.current_highest_bid ? t("detail.currentHighestBid") : t("auction.startingPrice")}
                 </p>
                 <p className="font-display text-3xl font-bold text-foreground">
                   {formatCurrency(currentPrice, settings.currency)}
@@ -190,41 +135,28 @@ export default function AuctionDetail() {
               {item.current_highest_bid && (
                 <div className="flex items-center gap-1.5 text-gold">
                   <TrendingUp className="h-5 w-5" />
-                  <span className="text-sm font-medium">Active Bidding</span>
+                  <span className="text-sm font-medium">{t("detail.activeBidding")}</span>
                 </div>
               )}
             </div>
-
             <div className="mt-6 border-t border-border pt-6">
-              <BidForm
-                auctionId={item.id}
-                minimumBid={minimumBid}
-                isExpired={isExpired}
-                onBidPlaced={fetchItem}
-              />
+              <BidForm auctionId={item.id} minimumBid={minimumBid} isExpired={isExpired} onBidPlaced={fetchItem} />
             </div>
           </div>
 
-          {/* Auction Info */}
           <div className="mt-6 space-y-3 text-sm text-muted-foreground">
             <div className="flex justify-between">
-              <span>Auction Started</span>
-              <span className="font-medium text-foreground">
-                {formatDate(item.start_time)}
-              </span>
+              <span>{t("detail.auctionStarted")}</span>
+              <span className="font-medium text-foreground">{formatDate(item.start_time)}</span>
             </div>
             <div className="flex justify-between">
-              <span>Original End Time</span>
-              <span className="font-medium text-foreground">
-                {formatDate(item.original_end_time)}
-              </span>
+              <span>{t("detail.originalEndTime")}</span>
+              <span className="font-medium text-foreground">{formatDate(item.original_end_time)}</span>
             </div>
             {item.end_time !== item.original_end_time && (
               <div className="flex justify-between">
-                <span>Extended End Time</span>
-                <span className="font-medium text-gold">
-                  {formatDate(item.end_time)}
-                </span>
+                <span>{t("detail.extendedEndTime")}</span>
+                <span className="font-medium text-gold">{formatDate(item.end_time)}</span>
               </div>
             )}
           </div>
