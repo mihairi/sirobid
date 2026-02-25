@@ -26,9 +26,9 @@ export default function Index() {
 
 
 
-            <p className="mt-6 text-lg text-primary-foreground/70">
-              {t("home.heroDescription")}
-            </p>
+            
+
+
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
               {user ?
