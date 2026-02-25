@@ -39,66 +39,66 @@ export function Header() {
           </span>
         </Link>
 
-        <nav className="flex items-center gap-4">
-          {user ? (
-            <>
-              <Link to="/auctions">
-                <Button variant="ghost" className="font-medium">
-                  {t("header.browseAuctions")}
-                </Button>
-              </Link>
+        
 
-              {isAdmin && (
-                <Link to="/admin">
-                  <Button variant="outline-gold" size="sm" className="gap-2">
-                    <Shield className="h-4 w-4" />
-                    {t("header.admin")}
-                  </Button>
-                </Link>
-              )}
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="rounded-full">
-                    <User className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium">{user.email}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {isAdmin ? t("header.administrator") : t("header.member")}
-                    </p>
-                  </div>
-                  <DropdownMenuSeparator />
-                  {isAdmin && (
-                    <DropdownMenuItem asChild>
-                      <Link to="/settings" className="flex cursor-pointer items-center">
-                        <Settings className="mr-2 h-4 w-4" />
-                        {t("header.settings")}
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    {t("header.signOut")}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
-          ) : (
-            <>
-              <Link to="/login">
-                <Button variant="ghost">{t("header.signIn")}</Button>
-              </Link>
-              <Link to="/signup">
-                <Button variant="gold">{t("header.joinNow")}</Button>
-              </Link>
-            </>
-          )}
-        </nav>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       </div>
-    </header>
-  );
+    </header>);
+
 }
