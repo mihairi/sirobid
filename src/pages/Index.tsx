@@ -18,10 +18,9 @@ export default function Index() {
 
           </div>
 
-          <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-16 grid gap-8 sm:grid-cols-2">
             <FeatureCard icon={Shield} title={t("home.secureBidding")} description={t("home.secureBiddingDesc")} />
             <FeatureCard icon={Clock} title={t("home.smartTimer")} description={t("home.smartTimerDesc")} />
-            <FeatureCard icon={TrendingUp} title={t("home.realTimeUpdates")} description={t("home.realTimeUpdatesDesc")} />
           </div>
         </div>
       </section>
@@ -46,7 +45,17 @@ export default function Index() {
 
 
 
-            <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
+            <div className="mb-8 mx-auto max-w-md">
+              <div className="rounded-xl border border-primary-foreground/20 bg-primary-foreground/10 p-6 text-center">
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gold/20 text-gold">
+                  <TrendingUp className="h-6 w-6" />
+                </div>
+                <h3 className="font-display text-xl font-semibold text-primary-foreground">{t("home.realTimeUpdates")}</h3>
+                <p className="mt-2 text-primary-foreground/70">{t("home.realTimeUpdatesDesc")}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
               {user ?
               <Link to="/auctions">
                   <Button variant="gold" size="xl" className="group">
