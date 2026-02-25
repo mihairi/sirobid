@@ -10,42 +10,28 @@ export default function Index() {
 
   return (
     <div className="flex flex-col">
-      {/* Features Section */}
-      <section className="py-20 lg:py-28">
-        <div className="container">
-          <div className="mx-auto max-w-2xl text-center">
-            
-
-          </div>
-
-          <div className="mt-16 grid gap-8 sm:grid-cols-2">
-            <FeatureCard icon={Shield} title={t("home.secureBidding")} description={t("home.secureBiddingDesc")} />
-            <FeatureCard icon={Clock} title={t("home.smartTimer")} description={t("home.smartTimerDesc")} />
-          </div>
-        </div>
-      </section>
-
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-primary py-24 lg:py-32">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAzMHYySDI0di0yaDEyek0zNiAyNnYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-50 bg-[#083891]" />
 
         <div className="container relative">
-          <div className="mx-auto max-w-3xl text-center">
-            
+          <div className="mx-auto max-w-5xl text-center">
 
-
-
-
-            
-
-
-
-
-            
-
-
-
-            <div className="mb-8 mx-auto max-w-md">
+            <div className="mb-8 grid gap-6 sm:grid-cols-3">
+              <div className="rounded-xl border border-primary-foreground/20 bg-primary-foreground/10 p-6 text-center">
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gold/20 text-gold">
+                  <Shield className="h-6 w-6" />
+                </div>
+                <h3 className="font-display text-xl font-semibold text-primary-foreground">{t("home.secureBidding")}</h3>
+                <p className="mt-2 text-primary-foreground/70">{t("home.secureBiddingDesc")}</p>
+              </div>
+              <div className="rounded-xl border border-primary-foreground/20 bg-primary-foreground/10 p-6 text-center">
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gold/20 text-gold">
+                  <Clock className="h-6 w-6" />
+                </div>
+                <h3 className="font-display text-xl font-semibold text-primary-foreground">{t("home.smartTimer")}</h3>
+                <p className="mt-2 text-primary-foreground/70">{t("home.smartTimerDesc")}</p>
+              </div>
               <div className="rounded-xl border border-primary-foreground/20 bg-primary-foreground/10 p-6 text-center">
                 <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gold/20 text-gold">
                   <TrendingUp className="h-6 w-6" />
@@ -82,6 +68,7 @@ export default function Index() {
           </div>
         </div>
       </section>
+
 
       {/* CTA Section */}
       <section className="border-t border-border bg-muted/50 py-20">
