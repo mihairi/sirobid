@@ -21,10 +21,10 @@ export default function Index() {
 
 
 
-            <h1 className="font-display text-4xl font-bold tracking-tight text-primary-foreground sm:text-5xl lg:text-6xl">
-              {t("home.heroTitle1")}
-              <span className="block text-gold">{t("home.heroTitle2")}</span>
-            </h1>
+            
+
+
+
 
             <p className="mt-6 text-lg text-primary-foreground/70">
               {t("home.heroDescription")}
