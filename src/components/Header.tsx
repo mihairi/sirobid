@@ -39,66 +39,38 @@ export function Header() {
           </span>
         </Link>
 
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        <div className="flex items-center gap-2">
+          {user ? (
+            <>
+              {isAdmin && (
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/admin" className="flex items-center gap-1.5">
+                      <Shield className="h-4 w-4" />
+                      <span className="hidden sm:inline">{t("header.admin")}</span>
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/settings" className="flex items-center gap-1.5">
+                      <Settings className="h-4 w-4" />
+                      <span className="hidden sm:inline">{t("header.settings")}</span>
+                    </Link>
+                  </Button>
+                </>
+              )}
+              <Button variant="ghost" size="sm" onClick={handleSignOut} className="flex items-center gap-1.5">
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">{t("header.signOut")}</span>
+              </Button>
+            </>
+          ) : (
+            <Button variant="default" size="sm" asChild>
+              <Link to="/login">{t("header.browseAuctions")}</Link>
+            </Button>
+          )}
+        </div>
       </div>
-    </header>);
+    </header>
+  );
 
 }
