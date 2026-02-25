@@ -16,10 +16,10 @@ export default function Index() {
 
         <div className="container relative">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-2 text-sm font-medium text-gold">
-              <Gavel className="h-4 w-4" />
-              {t("home.badge")}
-            </div>
+            
+
+
+
 
             <h1 className="font-display text-4xl font-bold tracking-tight text-primary-foreground sm:text-5xl lg:text-6xl">
               {t("home.heroTitle1")}
@@ -31,15 +31,15 @@ export default function Index() {
             </p>
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
-              {user ? (
-                <Link to="/auctions">
+              {user ?
+              <Link to="/auctions">
                   <Button variant="gold" size="xl" className="group">
                     {t("home.browseAuctions")}
                     <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </Button>
-                </Link>
-              ) : (
-                <>
+                </Link> :
+
+              <>
                   <Link to="/signup">
                     <Button variant="gold" size="xl" className="group">
                       {t("home.startBidding")}
@@ -52,7 +52,7 @@ export default function Index() {
                     </Button>
                   </Link>
                 </>
-              )}
+              }
             </div>
           </div>
         </div>
@@ -88,29 +88,29 @@ export default function Index() {
             <p className="mt-4 text-muted-foreground">
               {t("home.readyToStartDesc")}
             </p>
-            {!user && (
-              <Link to="/signup" className="mt-8 inline-block">
+            {!user &&
+            <Link to="/signup" className="mt-8 inline-block">
                 <Button variant="gold" size="xl">
                   {t("home.createFreeAccount")}
                 </Button>
               </Link>
-            )}
+            }
           </div>
         </div>
       </section>
-    </div>
-  );
+    </div>);
+
 }
 
 function FeatureCard({
   icon: Icon,
   title,
-  description,
-}: {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-}) {
+  description
+
+
+
+
+}: {icon: React.ElementType;title: string;description: string;}) {
   return (
     <div className="group rounded-xl border border-border bg-card p-6 shadow-card transition-all duration-300 hover:border-gold/30 hover:shadow-lg">
       <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gold/10 text-gold transition-colors group-hover:bg-gold group-hover:text-primary">
@@ -118,6 +118,6 @@ function FeatureCard({
       </div>
       <h3 className="font-display text-xl font-semibold text-foreground">{title}</h3>
       <p className="mt-2 text-muted-foreground">{description}</p>
-    </div>
-  );
+    </div>);
+
 }
