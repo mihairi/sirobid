@@ -38,6 +38,14 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
 
   const res = await fetch(`${API_URL}${path}`, { ...options, headers });
+
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(
+      `Expected JSON from ${path} but got ${contentType || "unknown content-type"} (status ${res.status}). Is the Express server running?`
+    );
+  }
+
   const data = await res.json();
 
   if (!res.ok) {
@@ -98,6 +106,13 @@ export const api = {
       return request<{ message: string }>("/auth/forgot-password", {
         method: "POST",
         body: JSON.stringify({ email }),
+      });
+    },
+
+    async resetPassword(token: string, password: string) {
+      return request<{ message: string }>("/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ token, password }),
       });
     },
 
