@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import { supabase } from "@/lib/supabase";
+import { createAuction, uploadAuctionImage } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,20 +75,6 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
     setExtraImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const uploadImage = async (file: File): Promise<string> => {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${crypto.randomUUID()}.${fileExt}`;
-    const filePath = `auction-items/${fileName}`;
-
-    const { error } = await supabase.storage
-      .from("auction-images")
-      .upload(filePath, file);
-    if (error) throw error;
-
-    const { data } = supabase.storage.from("auction-images").getPublicUrl(filePath);
-    return data.publicUrl;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
@@ -117,19 +103,19 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
     try {
       let imageUrl: string | null = null;
       if (mainImage) {
-        imageUrl = await uploadImage(mainImage);
+        imageUrl = await uploadAuctionImage(mainImage);
       }
 
       const extraImageUrls: string[] = [];
       for (const file of extraImages) {
-        const url = await uploadImage(file);
+        const url = await uploadAuctionImage(file);
         extraImageUrls.push(url);
       }
 
       const startDate = new Date(startTime);
       const endDate = new Date(endTime);
 
-      const { error } = await supabase.from("auction_items").insert({
+      await createAuction({
         title,
         description,
         starting_price: parseFloat(startingPrice),
@@ -141,8 +127,6 @@ export function AdminCreateAuction({ onSuccess }: AdminCreateAuctionProps) {
         is_active: true,
         created_by: user?.id,
       });
-
-      if (error) throw error;
 
       toast({
         title: t("admin.auctionCreated"),

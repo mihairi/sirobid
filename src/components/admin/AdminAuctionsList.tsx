@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchAllAuctions, deleteAuction } from "@/lib/data";
 import type { AuctionItem } from "@/lib/supabase";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -23,22 +23,24 @@ export function AdminAuctionsList() {
   const { toast } = useToast();
   const { t } = useTranslation();
 
-  useEffect(() => { fetchAuctions(); }, []);
+  useEffect(() => { loadAuctions(); }, []);
 
-  const fetchAuctions = async () => {
-    const { data, error } = await supabase.from("auction_items").select("*").order("created_at", { ascending: false });
-    if (!error && data) setItems(data as AuctionItem[]);
+  const loadAuctions = async () => {
+    try {
+      const data = await fetchAllAuctions();
+      setItems(data);
+    } catch {}
     setIsLoading(false);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm(t("admin.deleteConfirm"))) return;
-    const { error } = await supabase.from("auction_items").delete().eq("id", id);
-    if (error) {
-      toast({ title: t("common.error"), description: t("admin.deleteError"), variant: "destructive" });
-    } else {
+    try {
+      await deleteAuction(id);
       toast({ title: t("admin.auctionDeleted") });
-      fetchAuctions();
+      loadAuctions();
+    } catch {
+      toast({ title: t("common.error"), description: t("admin.deleteError"), variant: "destructive" });
     }
   };
 
@@ -68,7 +70,7 @@ export function AdminAuctionsList() {
           </TableBody>
         </Table>
       </div>
-      <AdminEditAuction auction={editingAuction} open={editOpen} onOpenChange={setEditOpen} onSuccess={fetchAuctions} />
+      <AdminEditAuction auction={editingAuction} open={editOpen} onOpenChange={setEditOpen} onSuccess={loadAuctions} />
     </>
   );
 }

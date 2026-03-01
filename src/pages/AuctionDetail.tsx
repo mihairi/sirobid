@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { fetchAuctionById, subscribeToAuction } from "@/lib/data";
 import type { AuctionItem } from "@/lib/supabase";
 import { BidForm } from "@/components/BidForm";
 import { useCountdown } from "@/hooks/useCountdown";
@@ -21,31 +21,24 @@ export default function AuctionDetail() {
 
   const fetchItem = useCallback(async () => {
     if (!id) return;
-    const { data, error: fetchError } = await supabase
-      .from("auction_items")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
-
-    if (fetchError) {
+    try {
+      const data = await fetchAuctionById(id);
+      if (!data) {
+        setError("Auction item not found");
+      } else {
+        setItem(data);
+      }
+    } catch {
       setError("Failed to load auction item");
-    } else if (!data) {
-      setError("Auction item not found");
-    } else {
-      setItem(data as AuctionItem);
     }
     setIsLoading(false);
   }, [id]);
 
   useEffect(() => {
     fetchItem();
-    const channel = supabase
-      .channel(`auction_item_${id}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "auction_items", filter: `id=eq.${id}` }, (payload) => {
-        setItem(payload.new as AuctionItem);
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    if (!id) return;
+    const unsubscribe = subscribeToAuction(id, (updated) => setItem(updated));
+    return unsubscribe;
   }, [id, fetchItem]);
 
   const { timeLeft, isUrgent, isExpired } = useCountdown(item?.end_time ?? "");
@@ -77,9 +70,7 @@ export default function AuctionDetail() {
           <h1 className="mt-4 font-display text-2xl font-bold text-foreground">
             {error || t("detail.itemNotFound")}
           </h1>
-          <p className="mt-2 text-muted-foreground">
-            {t("detail.notFoundDesc")}
-          </p>
+          <p className="mt-2 text-muted-foreground">{t("detail.notFoundDesc")}</p>
           <Link to="/auctions" className="mt-6 inline-block">
             <Button variant="gold">{t("detail.browseAll")}</Button>
           </Link>

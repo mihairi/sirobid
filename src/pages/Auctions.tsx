@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchActiveAuctions, subscribeToAuctions } from "@/lib/data";
 import type { AuctionItem } from "@/lib/supabase";
 import { AuctionCard } from "@/components/AuctionCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,29 +13,19 @@ export default function Auctions() {
   const [searchQuery, setSearchQuery] = useState("");
   const { t } = useTranslation();
 
-  useEffect(() => {
-    fetchAuctions();
-
-    const channel = supabase.channel("auction_items_changes").on("postgres_changes", {
-      event: "*",
-      schema: "public",
-      table: "auction_items"
-    }, () => {
-      fetchAuctions();
-    }).subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const fetchAuctions = async () => {
-    const { data, error } = await supabase.from("auction_items").select("*").eq("is_active", true).order("end_time", { ascending: true });
-    if (!error && data) {
-      setItems(data as AuctionItem[]);
-    }
+  const loadAuctions = async () => {
+    try {
+      const data = await fetchActiveAuctions();
+      setItems(data);
+    } catch {}
     setIsLoading(false);
   };
+
+  useEffect(() => {
+    loadAuctions();
+    const unsubscribe = subscribeToAuctions(loadAuctions);
+    return unsubscribe;
+  }, []);
 
   const filteredItems = items.filter(item =>
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

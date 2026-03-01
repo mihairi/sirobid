@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchAllBids, subscribeToBids, type BidWithDetails } from "@/lib/data";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -11,14 +11,6 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Search, Download } from "lucide-react";
 
-type BidWithDetails = {
-  id: string;
-  amount: number;
-  created_at: string;
-  auction_items: { title: string; current_highest_bid: number | null } | null;
-  profiles: { email: string } | null;
-};
-
 export function AdminBidsList() {
   const { settings } = useSettings();
   const { t } = useTranslation();
@@ -26,35 +18,17 @@ export function AdminBidsList() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    fetchBids();
-    const channel = supabase.channel("admin_bids").on("postgres_changes", { event: "INSERT", schema: "public", table: "bids" }, () => { fetchBids(); }).subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, []);
-
-  const fetchBids = async () => {
-    const { data: bidsData, error: bidsError } = await supabase
-      .from("bids")
-      .select(`id, amount, created_at, bidder_id, auction_items (title, current_highest_bid)`)
-      .order("created_at", { ascending: false });
-
-    if (bidsError || !bidsData) { setIsLoading(false); return; }
-
-    const bidderIds = [...new Set(bidsData.map((b) => b.bidder_id))];
-    const { data: profilesData } = await supabase.from("profiles").select("user_id, email").in("user_id", bidderIds);
-    const profileMap = new Map((profilesData ?? []).map((p) => [p.user_id, p.email]));
-
-    const merged: BidWithDetails[] = bidsData.map((b) => ({
-      id: b.id,
-      amount: b.amount,
-      created_at: b.created_at,
-      auction_items: b.auction_items as { title: string; current_highest_bid: number | null } | null,
-      profiles: profileMap.has(b.bidder_id) ? { email: profileMap.get(b.bidder_id)! } : null,
-    }));
-
-    setBids(merged);
+  const loadBids = async () => {
+    const data = await fetchAllBids();
+    setBids(data);
     setIsLoading(false);
   };
+
+  useEffect(() => {
+    loadBids();
+    const unsubscribe = subscribeToBids(loadBids);
+    return unsubscribe;
+  }, []);
 
   const filteredBids = bids.filter((bid) => {
     const query = searchQuery.toLowerCase();
