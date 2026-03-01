@@ -86,6 +86,13 @@ export const api = {
       }
     },
 
+    async forgotPassword(email: string) {
+      return request<{ message: string }>("/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
+    },
+
     signOut() {
       clearToken();
     },

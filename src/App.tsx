@@ -9,6 +9,8 @@ import { Header } from "@/components/Header";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Auctions from "./pages/Auctions";
 import AuctionDetail from "./pages/AuctionDetail";
 import Admin from "./pages/Admin";
@@ -32,6 +34,8 @@ const App = () => (
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/auctions" element={<Auctions />} />
                   <Route path="/auction/:id" element={<AuctionDetail />} />
                   <Route path="/admin" element={<Admin />} />
