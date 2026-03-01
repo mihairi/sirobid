@@ -174,12 +174,20 @@ export async function fetchAllBids(): Promise<BidWithDetails[]> {
 
 export async function uploadAuctionImage(file: File): Promise<string> {
   if (isSelfHosted) {
-    // For self-hosted, image upload needs a different endpoint.
-    // For now, throw a descriptive error — user needs to set up /upload endpoint.
-    throw new Error(
-      "Image upload is not yet supported in self-hosted mode. " +
-      "Add a POST /upload endpoint to your Express server."
-    );
+    const API_URL = import.meta.env.VITE_API_URL as string;
+    const token = localStorage.getItem("auth_token");
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch(`${API_URL}/upload`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Upload failed");
+    return data.url;
   }
 
   const fileExt = file.name.split(".").pop();
