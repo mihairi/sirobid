@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { updateAuction, uploadAuctionImage } from "@/lib/data";
 import type { AuctionItem } from "@/lib/supabase";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
@@ -52,16 +52,6 @@ export function AdminEditAuction({ auction, open, onOpenChange, onSuccess }: Adm
     }
   };
 
-  const uploadImage = async (file: File): Promise<string> => {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${crypto.randomUUID()}.${fileExt}`;
-    const filePath = `auction-items/${fileName}`;
-    const { error } = await supabase.storage.from("auction-images").upload(filePath, file);
-    if (error) throw error;
-    const { data } = supabase.storage.from("auction-images").getPublicUrl(filePath);
-    return data.publicUrl;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auction) return;
@@ -74,19 +64,16 @@ export function AdminEditAuction({ auction, open, onOpenChange, onSuccess }: Adm
     setIsSubmitting(true);
     try {
       let imageUrl = auction.image_url;
-      if (imageFile) imageUrl = await uploadImage(imageFile);
+      if (imageFile) imageUrl = await uploadAuctionImage(imageFile);
 
-      const { error } = await supabase
-        .from("auction_items")
-        .update({
-          title: title.trim(), description: description.trim(),
-          starting_price: parseFloat(startingPrice),
-          end_time: new Date(endTime).toISOString(),
-          is_active: isActive, image_url: imageUrl,
-        })
-        .eq("id", auction.id);
-
-      if (error) throw error;
+      await updateAuction(auction.id, {
+        title: title.trim(),
+        description: description.trim(),
+        starting_price: parseFloat(startingPrice),
+        end_time: new Date(endTime).toISOString(),
+        is_active: isActive,
+        image_url: imageUrl,
+      });
 
       toast({ title: t("admin.auctionUpdated") });
       onOpenChange(false);

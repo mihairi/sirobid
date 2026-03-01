@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings, currencyConfig } from "@/contexts/SettingsContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import { supabase } from "@/lib/supabase";
+import { placeBid } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,49 +31,24 @@ export function BidForm({ auctionId, minimumBid, isExpired, onBidPlaced }: BidFo
     e.preventDefault();
 
     if (!user) {
-      toast({
-        title: t("bid.authRequired"),
-        description: t("bid.authRequiredDesc"),
-        variant: "destructive",
-      });
+      toast({ title: t("bid.authRequired"), description: t("bid.authRequiredDesc"), variant: "destructive" });
       return;
     }
 
     const bidAmount = parseFloat(amount);
-
     if (isNaN(bidAmount) || bidAmount < minimumBid) {
-      toast({
-        title: t("bid.invalidBid"),
-        description: `${t("bid.minimumBid")}: ${formatCurrency(minimumBid, settings.currency)}`,
-        variant: "destructive",
-      });
+      toast({ title: t("bid.invalidBid"), description: `${t("bid.minimumBid")}: ${formatCurrency(minimumBid, settings.currency)}`, variant: "destructive" });
       return;
     }
 
     setIsSubmitting(true);
-
     try {
-      const { error } = await supabase.from("bids").insert({
-        auction_item_id: auctionId,
-        bidder_id: user.id,
-        amount: bidAmount,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: t("bid.bidSuccess"),
-        description: `${formatCurrency(bidAmount, settings.currency)}`,
-      });
-
+      await placeBid(auctionId, user.id, bidAmount);
+      toast({ title: t("bid.bidSuccess"), description: `${formatCurrency(bidAmount, settings.currency)}` });
       setAmount("");
       onBidPlaced();
     } catch (error: any) {
-      toast({
-        title: t("bid.bidFailed"),
-        description: error.message || "Failed to place bid. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: t("bid.bidFailed"), description: error.message || "Failed to place bid. Please try again.", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
@@ -98,41 +73,19 @@ export function BidForm({ auctionId, minimumBid, isExpired, onBidPlaced }: BidFo
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="bid-amount" className="text-sm font-medium">
-          {t("bid.yourBidAmount")}
-        </Label>
+        <Label htmlFor="bid-amount" className="text-sm font-medium">{t("bid.yourBidAmount")}</Label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-            {currencySymbol}
-          </span>
-          <Input
-            id="bid-amount"
-            type="number"
-            step="0.01"
-            min={minimumBid}
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder={minimumBid.toFixed(2)}
-            className="pl-7 input-premium"
-            disabled={isSubmitting}
-          />
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{currencySymbol}</span>
+          <Input id="bid-amount" type="number" step="0.01" min={minimumBid} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={minimumBid.toFixed(2)} className="pl-7 input-premium" disabled={isSubmitting} />
         </div>
-        <p className="text-xs text-muted-foreground">
-          {t("bid.minimumBid")}: {formatCurrency(minimumBid, settings.currency)}
-        </p>
+        <p className="text-xs text-muted-foreground">{t("bid.minimumBid")}: {formatCurrency(minimumBid, settings.currency)}</p>
       </div>
 
       <Button type="submit" variant="gold" size="xl" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? (
-          <>
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            {t("bid.placingBid")}
-          </>
+          <><Loader2 className="mr-2 h-5 w-5 animate-spin" />{t("bid.placingBid")}</>
         ) : (
-          <>
-            <Gavel className="mr-2 h-5 w-5" />
-            {t("bid.placeBid")}
-          </>
+          <><Gavel className="mr-2 h-5 w-5" />{t("bid.placeBid")}</>
         )}
       </Button>
     </form>
