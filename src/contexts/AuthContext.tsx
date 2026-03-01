@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { isSelfHosted, api, ApiUser } from "@/lib/api";
+import { isSelfHostedFn, api, ApiUser } from "@/lib/api";
 
 type AuthUser = {
   id: string;
@@ -163,7 +163,7 @@ function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 // ── Exported provider picks the right implementation ──
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  if (isSelfHosted) {
+  if (isSelfHostedFn()) {
     return <SelfHostedAuthProvider>{children}</SelfHostedAuthProvider>;
   }
   return <SupabaseAuthProvider>{children}</SupabaseAuthProvider>;

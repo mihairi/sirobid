@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Gavel, Loader2, ArrowLeft, Mail } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { isSelfHosted, api } from "@/lib/api";
+import { isSelfHostedFn, api } from "@/lib/api";
 
 const emailSchema = z.object({
   email: z.string().trim().email("Please enter a valid email address"),
@@ -42,7 +42,7 @@ export default function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      if (isSelfHosted) {
+      if (isSelfHostedFn()) {
         await api.auth.forgotPassword(email);
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {

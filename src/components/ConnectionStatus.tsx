@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { isSelfHosted, api } from "@/lib/api";
+import { isSelfHosted, isSelfHostedFn, api } from "@/lib/api";
 import { Wifi, WifiOff } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
