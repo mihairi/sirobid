@@ -160,10 +160,26 @@ function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// ── Exported provider picks the right implementation ──
+// ── Exported provider picks the right implementation after health check ──
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  if (isSelfHostedFn()) {
+  const [mode, setMode] = useState<"loading" | "self" | "cloud">("loading");
+
+  useEffect(() => {
+    if (!import.meta.env.VITE_API_URL) {
+      setMode("cloud");
+      return;
+    }
+    // Run a quick health check to decide which backend to use
+    api.health.check().then((ok) => {
+      setMode(ok ? "self" : "cloud");
+    });
+  }, []);
+
+  if (mode === "loading") {
+    return null; // brief flash while checking backend
+  }
+  if (mode === "self") {
     return <SelfHostedAuthProvider>{children}</SelfHostedAuthProvider>;
   }
   return <SupabaseAuthProvider>{children}</SupabaseAuthProvider>;
