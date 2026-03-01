@@ -118,6 +118,12 @@ export default function Login() {
             )}
           </div>
 
+          <div className="flex justify-end">
+            <Link to="/forgot-password" className="text-sm font-medium text-gold hover:underline">
+              {t("login.forgotPassword")}
+            </Link>
+          </div>
+
           <Button
             type="submit"
             variant="gold"
