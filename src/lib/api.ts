@@ -116,4 +116,17 @@ export const api = {
         body: JSON.stringify({ auction_item_id, amount }),
       }),
   },
+
+  // ── Health ──
+  health: {
+    async check(): Promise<boolean> {
+      if (!API_URL) return false;
+      try {
+        const res = await fetch(`${API_URL}/health`, { signal: AbortSignal.timeout(3000) });
+        return res.ok;
+      } catch {
+        return false;
+      }
+    },
+  },
 };

@@ -5,7 +5,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Gavel, User, LogOut, Shield, Settings, Crown, Diamond, Star, Hammer } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-
+import { ConnectionStatus } from "@/components/ConnectionStatus";
 const iconComponents: Record<AppBranding["icon"], React.ElementType> = {
   gavel: Gavel,
   crown: Crown,
@@ -40,6 +40,7 @@ export function Header() {
         </Link>
 
         <div className="flex items-center gap-2">
+          <ConnectionStatus />
           {user ? (
             <>
               {isAdmin && (
