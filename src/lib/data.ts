@@ -4,15 +4,14 @@
  */
 
 import { supabase } from "@/lib/supabase";
-import { isSelfHosted, api } from "@/lib/api";
+import { isSelfHostedFn, api } from "@/lib/api";
 import type { AuctionItem, Bid } from "@/lib/supabase";
 
 // ── Auctions ──
 
 export async function fetchActiveAuctions(): Promise<AuctionItem[]> {
-  if (isSelfHosted) {
+  if (isSelfHostedFn()) {
     const data = await api.auctions.list();
-    // Express backend returns all; filter active client-side
     return (data as AuctionItem[]).filter((a) => a.is_active).sort(
       (a, b) => new Date(a.end_time).getTime() - new Date(b.end_time).getTime()
     );
@@ -29,7 +28,7 @@ export async function fetchActiveAuctions(): Promise<AuctionItem[]> {
 }
 
 export async function fetchAllAuctions(): Promise<AuctionItem[]> {
-  if (isSelfHosted) {
+  if (isSelfHostedFn()) {
     const data = await api.auctions.list();
     return (data as AuctionItem[]).sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -46,7 +45,7 @@ export async function fetchAllAuctions(): Promise<AuctionItem[]> {
 }
 
 export async function fetchAuctionById(id: string): Promise<AuctionItem | null> {
-  if (isSelfHosted) {
+  if (isSelfHostedFn()) {
     try {
       return (await api.auctions.get(id)) as AuctionItem;
     } catch {
@@ -76,7 +75,7 @@ export async function createAuction(auction: {
   is_active: boolean;
   created_by: string | undefined;
 }): Promise<void> {
-  if (isSelfHosted) {
+  if (isSelfHostedFn()) {
     await api.auctions.create(auction);
     return;
   }
@@ -89,7 +88,7 @@ export async function updateAuction(
   id: string,
   fields: Partial<AuctionItem>
 ): Promise<void> {
-  if (isSelfHosted) {
+  if (isSelfHostedFn()) {
     await api.auctions.update(id, fields);
     return;
   }
@@ -99,7 +98,7 @@ export async function updateAuction(
 }
 
 export async function deleteAuction(id: string): Promise<void> {
-  if (isSelfHosted) {
+  if (isSelfHostedFn()) {
     await api.auctions.delete(id);
     return;
   }
@@ -111,7 +110,7 @@ export async function deleteAuction(id: string): Promise<void> {
 // ── Bids ──
 
 export async function placeBid(auctionId: string, bidderId: string, amount: number): Promise<void> {
-  if (isSelfHosted) {
+  if (isSelfHostedFn()) {
     await api.bids.place(auctionId, amount);
     return;
   }
@@ -133,8 +132,7 @@ export type BidWithDetails = {
 };
 
 export async function fetchAllBids(): Promise<BidWithDetails[]> {
-  if (isSelfHosted) {
-    // Express backend /bids/admin returns flat bid objects
+  if (isSelfHostedFn()) {
     const bids = await api.bids.listAll();
     return bids.map((b: any) => ({
       id: b.id,
@@ -173,7 +171,7 @@ export async function fetchAllBids(): Promise<BidWithDetails[]> {
 // ── Image uploads ──
 
 export async function uploadAuctionImage(file: File): Promise<string> {
-  if (isSelfHosted) {
+  if (isSelfHostedFn()) {
     const API_URL = import.meta.env.VITE_API_URL as string;
     const token = localStorage.getItem("auth_token");
     const formData = new FormData();
@@ -201,11 +199,10 @@ export async function uploadAuctionImage(file: File): Promise<string> {
   return data.publicUrl;
 }
 
-// ── Realtime subscriptions (Supabase only, no-op for self-hosted) ──
+// ── Realtime subscriptions (Supabase only, polling for self-hosted) ──
 
 export function subscribeToAuctions(callback: () => void) {
-  if (isSelfHosted) {
-    // Polling fallback: refresh every 10 seconds
+  if (isSelfHostedFn()) {
     const interval = setInterval(callback, 10000);
     return () => clearInterval(interval);
   }
@@ -219,7 +216,7 @@ export function subscribeToAuctions(callback: () => void) {
 }
 
 export function subscribeToAuction(id: string, callback: (updated: AuctionItem) => void) {
-  if (isSelfHosted) {
+  if (isSelfHostedFn()) {
     const interval = setInterval(async () => {
       const item = await fetchAuctionById(id);
       if (item) callback(item);
@@ -241,7 +238,7 @@ export function subscribeToAuction(id: string, callback: (updated: AuctionItem) 
 }
 
 export function subscribeToBids(callback: () => void) {
-  if (isSelfHosted) {
+  if (isSelfHostedFn()) {
     const interval = setInterval(callback, 10000);
     return () => clearInterval(interval);
   }

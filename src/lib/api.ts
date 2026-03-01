@@ -5,6 +5,14 @@
 
 const API_URL = import.meta.env.VITE_API_URL as string | undefined;
 
+/** Starts true if VITE_API_URL is set; flips to false when backend is unreachable. */
+let _selfHosted = !!API_URL;
+
+export function isSelfHostedFn(): boolean {
+  return _selfHosted;
+}
+
+/** Legacy compat – use isSelfHostedFn() for runtime checks */
 export const isSelfHosted = !!API_URL;
 
 function getToken(): string | null {
@@ -127,7 +135,10 @@ export const api = {
   // ── Health ──
   health: {
     async check(): Promise<boolean> {
-      if (!API_URL) return false;
+      if (!API_URL) {
+        _selfHosted = false;
+        return false;
+      }
       try {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 3000);
@@ -136,9 +147,12 @@ export const api = {
           mode: "cors",
         });
         clearTimeout(timeout);
-        return res.ok;
+        const ok = res.ok;
+        _selfHosted = ok;
+        return ok;
       } catch (err) {
-        console.warn("[HealthCheck] Backend unreachable:", err);
+        console.warn("[HealthCheck] Backend unreachable, falling back to cloud:", err);
+        _selfHosted = false;
         return false;
       }
     },
