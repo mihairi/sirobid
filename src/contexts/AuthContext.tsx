@@ -28,13 +28,19 @@ function SelfHostedAuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    api.auth.getMe().then((me) => {
-      if (me) {
-        setUser(me.user);
-        setIsAdmin(me.roles.includes("admin"));
-      }
-      setIsLoading(false);
-    });
+    api.auth.getMe()
+      .then((me) => {
+        if (me) {
+          setUser(me.user);
+          setIsAdmin(me.roles.includes("admin"));
+        }
+      })
+      .catch((err) => {
+        console.error("Auth check failed:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   const signUp = async (email: string, password: string) => {
