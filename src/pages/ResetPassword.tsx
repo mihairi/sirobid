@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Gavel, Loader2, CheckCircle } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { isSelfHostedFn, api } from "@/lib/api";
 
 const resetSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -21,6 +22,7 @@ export default function ResetPassword() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -28,19 +30,18 @@ export default function ResetPassword() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({});
 
-  // Check for recovery token in URL hash
+  // Check for recovery token in URL hash (Supabase flow)
   useEffect(() => {
+    if (isSelfHostedFn()) return; // self-hosted uses ?token= query param
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get("type");
     if (type !== "recovery") {
-      // Also check query params as fallback
-      const searchParams = new URLSearchParams(window.location.search);
       const searchType = searchParams.get("type");
       if (searchType !== "recovery" && !window.location.hash.includes("access_token")) {
-        // No recovery token - but still show the form (Supabase may handle session automatically)
+        // No recovery token
       }
     }
-  }, []);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,8 +62,14 @@ export default function ResetPassword() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
+      if (isSelfHostedFn()) {
+        const token = searchParams.get("token");
+        if (!token) throw new Error("Missing reset token in URL");
+        await api.auth.resetPassword(token, password);
+      } else {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+      }
 
       setIsSuccess(true);
       toast({
