@@ -160,6 +160,18 @@ function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// ── Loading provider – renders children with a neutral "loading" context ──
+
+const loadingContextValue: AuthContextType = {
+  user: null,
+  session: null,
+  isLoading: true,
+  isAdmin: false,
+  signUp: async () => ({ error: new Error("Auth not ready") }),
+  signIn: async () => ({ error: new Error("Auth not ready") }),
+  signOut: async () => {},
+};
+
 // ── Exported provider picks the right implementation after health check ──
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -170,14 +182,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setMode("cloud");
       return;
     }
-    // Run a quick health check to decide which backend to use
     api.health.check().then((ok) => {
       setMode(ok ? "self" : "cloud");
     });
   }, []);
 
   if (mode === "loading") {
-    return null; // brief flash while checking backend
+    return (
+      <AuthContext.Provider value={loadingContextValue}>
+        {children}
+      </AuthContext.Provider>
+    );
   }
   if (mode === "self") {
     return <SelfHostedAuthProvider>{children}</SelfHostedAuthProvider>;
