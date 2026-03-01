@@ -82,12 +82,9 @@ router.post("/forgot-password", async (req, res) => {
   if (!email) return res.status(400).json({ error: "Email is required" });
 
   try {
-    // Check if user exists (don't reveal whether they do for security)
     const { rows } = await pool.query("SELECT id FROM users WHERE email = $1", [email.toLowerCase()]);
 
     if (rows.length > 0) {
-      // In a full implementation you'd generate a reset token and send an email.
-      // For self-hosted without SMTP, log the token to the server console.
       const crypto = await import("crypto");
       const resetToken = crypto.randomBytes(32).toString("hex");
       const expiry = new Date(Date.now() + 3600000); // 1 hour
@@ -97,9 +94,51 @@ router.post("/forgot-password", async (req, res) => {
         [resetToken, expiry, rows[0].id]
       );
 
-      // Log to server console so the admin can share the link with the user
-      console.log(`\n🔑 Password reset link for ${email}:`);
-      console.log(`   ${process.env.FRONTEND_URL || "http://localhost:8080"}/reset-password?token=${resetToken}\n`);
+      const resetLink = `${process.env.FRONTEND_URL || "http://localhost:8080"}/reset-password?token=${resetToken}`;
+
+      // Send email via SendGrid
+      if (process.env.SENDGRID_API_KEY) {
+        try {
+          const sgRes = await fetch("https://api.sendgrid.com/v3/mail/send", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              personalizations: [{ to: [{ email: email.toLowerCase() }] }],
+              from: { email: process.env.SENDGRID_FROM_EMAIL || "noreply@example.com", name: process.env.APP_NAME || "SiroBid" },
+              subject: "Reset your password",
+              content: [
+                {
+                  type: "text/html",
+                  value: `
+                    <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+                      <h2 style="color: #333;">Reset your password</h2>
+                      <p style="color: #555;">You requested a password reset. Click the button below to set a new password. This link expires in 1 hour.</p>
+                      <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background-color: #c9a84c; color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold;">Reset Password</a>
+                      <p style="color: #999; font-size: 12px; margin-top: 24px;">If you didn't request this, you can safely ignore this email.</p>
+                    </div>
+                  `,
+                },
+              ],
+            }),
+          });
+
+          if (!sgRes.ok) {
+            const errText = await sgRes.text();
+            console.error("[SendGrid] Failed to send email:", sgRes.status, errText);
+          } else {
+            console.log(`✅ Password reset email sent to ${email}`);
+          }
+        } catch (sgErr) {
+          console.error("[SendGrid] Error sending email:", sgErr.message);
+        }
+      } else {
+        // Fallback: log to console
+        console.log(`\n🔑 Password reset link for ${email}:`);
+        console.log(`   ${resetLink}\n`);
+      }
     }
 
     // Always return success to prevent email enumeration
