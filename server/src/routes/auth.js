@@ -76,4 +76,62 @@ router.get("/me", authenticate, async (req, res) => {
   }
 });
 
+// POST /auth/forgot-password
+router.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: "Email is required" });
+
+  try {
+    // Check if user exists (don't reveal whether they do for security)
+    const { rows } = await pool.query("SELECT id FROM users WHERE email = $1", [email.toLowerCase()]);
+
+    if (rows.length > 0) {
+      // In a full implementation you'd generate a reset token and send an email.
+      // For self-hosted without SMTP, log the token to the server console.
+      const crypto = await import("crypto");
+      const resetToken = crypto.randomBytes(32).toString("hex");
+      const expiry = new Date(Date.now() + 3600000); // 1 hour
+
+      await pool.query(
+        `UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3`,
+        [resetToken, expiry, rows[0].id]
+      );
+
+      // Log to server console so the admin can share the link with the user
+      console.log(`\n🔑 Password reset link for ${email}:`);
+      console.log(`   ${process.env.FRONTEND_URL || "http://localhost:8080"}/reset-password?token=${resetToken}\n`);
+    }
+
+    // Always return success to prevent email enumeration
+    res.json({ message: "If that email exists, a reset link has been sent." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /auth/reset-password
+router.post("/reset-password", async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ error: "Token and new password are required" });
+
+  try {
+    const { rows } = await pool.query(
+      "SELECT id FROM users WHERE reset_token = $1 AND reset_token_expires > NOW()",
+      [token]
+    );
+
+    if (rows.length === 0) return res.status(400).json({ error: "Invalid or expired reset token" });
+
+    const hash = await bcrypt.hash(password, 12);
+    await pool.query(
+      "UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2",
+      [hash, rows[0].id]
+    );
+
+    res.json({ message: "Password updated successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;
