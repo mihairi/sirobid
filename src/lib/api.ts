@@ -122,9 +122,16 @@ export const api = {
     async check(): Promise<boolean> {
       if (!API_URL) return false;
       try {
-        const res = await fetch(`${API_URL}/health`, { signal: AbortSignal.timeout(3000) });
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3000);
+        const res = await fetch(`${API_URL}/health`, {
+          signal: controller.signal,
+          mode: "cors",
+        });
+        clearTimeout(timeout);
         return res.ok;
-      } catch {
+      } catch (err) {
+        console.warn("[HealthCheck] Backend unreachable:", err);
         return false;
       }
     },
